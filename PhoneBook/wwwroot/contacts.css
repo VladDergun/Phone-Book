@@ -127,7 +127,7 @@
 }
 /* Default styles for larger screens */
 .popup {
-    position: absolute;
+    position: fixed;
     top: 50%;
     display: none;
     opacity: 1;
@@ -206,11 +206,8 @@
     }
     .popup {
         width: 300px; /* Adjust the width for smaller screens */
-        top: 70%;
-        height: auto;
         padding: 15px; /* Adjust padding for smaller screens */
     }
-
         .popup .form h2 {
             font-size: 20px; /* Adjust the font size for smaller screens */
             margin-bottom: 15px; /* Adjust margin for smaller screens */
