@@ -1,0 +1,358 @@
+﻿@page "/contacts"
+@using System.Text.RegularExpressions
+@rendermode InteractiveServer
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Contacts</PageTitle>
+<head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="contacts.css" />
+
+</head>
+<h1>Contact list</h1>
+
+<p role="status">Current contacts: @currentCount</p>
+
+
+
+
+
+<div class="search-add-bar">
+    <input class="input-field" type="text" @bind="searchTerm" placeholder="Search contacts" @oninput="UpdateFilteredContacts" />
+    <button class="add-contact" @onclick="ShowPopup">Add Contact</button>
+</div>
+<div class="overlay" id="overlay"></div>
+<div class="popup" id="popupForm">
+    <div class="btn-close" @onclick="ClosePopup">&times;</div>
+    <div class="form">
+        <h2>Add Contact</h2>
+        <div class="form-element">
+            <label for="firstName">First name</label>
+            <input type="text" id="firstName" @bind="firstName" placeholder="Enter first name" />
+        </div>
+        <div class="form-element">
+            <label for="lastName">Last name</label>
+            <input type="text" id="lastName" @bind="lastName" placeholder="Enter last name" />
+        </div>
+        <div class="form-element">
+            <label for="phoneNumber">Number</label>
+            <input type="text" id="phoneNumber" @bind="number" placeholder="Enter number" />
+            <!--<div class="form-err-msg" id="form-err-msg">Field number cannot be empty</div>  -->
+            <p class="form-err-msg" id="form-err-msg">Field number cannot be empty</p>
+        </div>
+        <div class="form-element">
+            <button @onclick="CreateContacts">Create Contact</button>
+        </div>
+    </div>
+
+</div>
+
+
+<div class="popup" id="editForm">
+    <div class="btn-close" @onclick="CloseEditForm">&times;</div>
+    <div class="form">
+        <h2>Edit Contact</h2>
+        <div class="form-element">
+            <label for="firstName">First name</label>
+            <input type="text" id="firstName" @bind="newContactFirstName" placeholder="Enter first name" />
+        </div>
+        <div class="form-element">
+            <label for="lastName">Last name</label>
+            <input type="text" id="lastName" @bind="newContactLastName" placeholder="Enter last name" />
+        </div>
+        <div class="form-element">
+            <label for="phoneNumber">Number</label>
+            <input type="text" id="phoneNumber" @bind="newContactNumber" placeholder="Enter number" />
+            <!--<div class="form-err-msg" id="form-err-msg">Field number cannot be empty</div>  -->
+            <p class="form-err-msg" id="edit-err-msg">Field number cannot be empty</p>
+        </div>
+        <div class="form-element">
+            <button @onclick="SaveEditedContact">Save Changes</button>
+        </div>
+    </div>
+
+</div>
+
+
+<script>
+    var formErr = document.getElementById("form-err-msg");
+    var editErr = document.getElementById("edit-err-msg");
+    var popupForm = document.getElementById("popupForm");
+    var editForm = document.getElementById("editForm");
+    var overlay = document.getElementById("overlay");
+
+    function showPopup() {
+
+        popupForm.style.display = "block";
+        overlay.style.display = "block";
+
+
+    }
+    function showEditForm() {
+        editForm.style.display = "block";
+        overlay.style.display = "block";
+
+    }
+    function closePopup() {
+
+        popupForm.style.display = "none";
+        overlay.style.display = "none";
+
+    }
+    function closeEditForm() {
+        editForm.style.display = "none";
+        overlay.style.display = "none";
+    }
+    function showNumLenError() {
+        formErr.style.display = "block";
+        editErr.style.display = "block";
+        formErr.textContent = "Field number cannot be empty";
+        editErr.textContent = "Field number cannot be empty";
+
+    }
+    function showNumTextError() {
+        editErr.style.display = "block";
+        formErr.style.display = "block";
+        formErr.textContent = "Number can only have: 0-9, #, *, -, +";
+        editErr.textContent = "Number can only have: 0-9, #, *, -, +";
+    }
+    function hideNumErrorMsgs() {
+        formErr.textContent = "";
+        editErr.textContent = "";
+    }
+</script>
+
+@if (isSearching)
+{
+    <div class="contact-list">
+
+
+        @foreach (var contact in filteredContacts)
+        {
+            <div class="contact-card">
+                <div class="contact-header">
+                    <h2>@contact.FirstName @contact.LastName</h2>
+                    <div class="btn-container">
+                        <button class="btn btn-edit" @onclick="() => ShowEditForm(contact.ID)">Edit</button>
+                        <button class="btn btn-danger" @onclick="() => DeleteContact(contact.ID)">Delete</button>
+
+
+                    </div>
+
+
+                </div>
+                <div class="contact-details">
+                    <h5>@contact.Number</h5>
+                    <!-- Add other contact details here -->
+                </div>
+            </div>
+        }
+    </div>
+}
+
+
+@if (contacts != null && contacts.Any() && !isSearching)
+{
+
+    <div class="contact-list">
+        @foreach (var contact in contacts)
+        {
+            <div class="contact-card">
+                <div class="contact-header">
+                    <h2>@contact.FirstName @contact.LastName</h2>
+                    <div class="btn-container">
+                        <button class="btn btn-edit" @onclick="() => ShowEditForm(contact.ID)">Edit</button>
+                        <button class="btn btn-danger" @onclick="() => DeleteContact(contact.ID)">Delete</button>
+
+
+                    </div>
+
+
+                </div>
+                <div class="contact-details">
+                    <h5>@contact.Number</h5>
+                    <!-- Add other contact details here -->
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    if (!isSearching)
+    {
+        <p>No contacts to display.</p>
+    }
+
+}
+
+
+
+
+
+
+@code {
+    private int currentCount = 0;
+    private bool isSearching => !string.IsNullOrWhiteSpace(searchTerm);
+
+    private List<Contacts> contacts;
+    private static string searchTerm = "";
+
+    private static string firstName = "";
+    private static string lastName = "";
+    private static string number = "";
+
+    private static string editedContactID;
+    private static string newContactFirstName = "";
+    private static string newContactLastName = "";
+    private static string newContactNumber = "";
+
+
+
+    private List<Contacts> filteredContacts => Data.FindContacts(searchTerm);
+
+    private bool IsValidNumber(string input)
+    {
+        // Define the pattern using a regular expression
+        string pattern = @"^[0-9\+\-\#\*]+$";
+
+        // Create a Regex object
+        Regex regex = new Regex(pattern);
+
+        // Use the IsMatch method to check if the input matches the pattern
+        return regex.IsMatch(input);
+    }
+
+    protected override void OnInitialized()
+    {
+        // Assuming Data.GetContacts() retrieves contacts from the database
+        contacts = Data.GetContacts();
+
+        // Update the count
+        currentCount = contacts.Count;
+    }
+
+
+    private void GetContacts()
+    {
+        // Assuming Data.GetContacts() retrieves contacts from the database
+        contacts = Data.GetContacts();
+        // Update the count and trigger a re-render
+        currentCount = contacts.Count;
+    }
+    private void SaveEditedContact()
+    {
+
+        if (string.IsNullOrEmpty(newContactNumber))
+        {
+            ShowNumLenError(1);
+        }
+        else if (!IsValidNumber(newContactNumber))
+        {
+            ShowNumLenError(2);
+        }
+        else
+        {
+            Data.EditContact(editedContactID, newContactFirstName, newContactLastName, newContactNumber);
+            GetContacts();
+            CloseEditForm();
+        }
+
+
+    }
+
+    private void DeleteContact(string contactId)
+    {
+
+        Data.RemoveContacts(contactId);
+
+
+        contacts.RemoveAll(c => c.ID == contactId);
+
+        currentCount = contacts.Count;
+    }
+    private void UpdateFilteredContacts(ChangeEventArgs e)
+    {
+        searchTerm = e.Value.ToString();
+    }
+
+    private void CreateContacts()
+    {
+
+        if (string.IsNullOrEmpty(number))
+        {
+            ShowNumLenError(1);
+        }
+        else if (!IsValidNumber(number))
+        {
+            ShowNumLenError(2);
+        }
+        else
+        {
+            Data.AddContacts(firstName, lastName, number);
+            ClosePopup();
+            GetContacts();
+            firstName = "";
+            lastName = "";
+            number = "";
+        }
+
+    }
+
+
+
+
+    private async Task ShowPopup()
+    {
+        // Call the JavaScript function to show the popup
+
+        await JSRuntime.InvokeAsync<object>("showPopup");
+    }
+    private async Task ShowEditForm(string id)
+    {
+        editedContactID = id;
+        Contacts contact = contacts.FirstOrDefault(c => c.ID.Equals(editedContactID));
+        newContactFirstName = contact.FirstName;
+        newContactLastName = contact.LastName;
+        newContactNumber = contact.Number;
+
+        // Call the JavaScript function to show the popup
+        await JSRuntime.InvokeAsync<object>("showEditForm");
+    }
+
+    private async Task ClosePopup()
+    {
+        firstName = "";
+        lastName = "";
+        number = "";
+        // Call the JavaScript function to close the popup
+        await JSRuntime.InvokeAsync<object>("closePopup");
+        await JSRuntime.InvokeAsync<object>("hideNumErrorMsgs");
+    }
+    private async Task CloseEditForm()
+    {
+        newContactFirstName = "";
+        newContactLastName = "";
+        newContactNumber = "";
+        // Call the JavaScript function to close the popup
+        await JSRuntime.InvokeAsync<object>("closeEditForm");
+        await JSRuntime.InvokeAsync<object>("hideNumErrorMsgs");
+    }
+    private async Task ShowNumLenError(int err_code)
+    {
+        // Call the JavaScript function to close the popup
+        switch (err_code)
+        {
+            case 1:
+                await JSRuntime.InvokeAsync<object>("showNumLenError");
+                break;
+            case 2:
+                await JSRuntime.InvokeAsync<object>("showNumTextError");
+                break;
+
+
+        }
+
+    }
+
+}
