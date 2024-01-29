@@ -125,18 +125,19 @@
     color: firebrick;
     display: none;
 }
+/* Default styles for larger screens */
 .popup {
     position: absolute;
     top: 50%;
     display: none;
     opacity: 1;
     left: 50%;
-    transform: translate(-50%,-50%) scale(1.25);
+    transform: translate(-50%, -50%) scale(1.25);
     width: 380px;
     z-index: 2;
     padding: 20px;
     background: #fff;
-    box-shadow: 2px 2px 5px 5px rgba(0,0,0,0.15);
+    box-shadow: 2px 2px 5px 5px rgba(0, 0, 0, 0.15);
     border-radius: 10px;
     transition: top 0ms ease-in-out 200ms, opacity 200ms ease-in-out 0ms, transform 20ms ease-in-out 0ms;
 }
@@ -197,5 +198,39 @@
             border-radius: 10px;
             cursor: pointer;
         }
+
+/* Media query for phones */
+@media only screen and (max-width: 480px) {
+    .popup {
+        width: 300px; /* Adjust the width for smaller screens */
+        top: 50%;
+        padding: 15px; /* Adjust padding for smaller screens */
+        height: auto;
+    }
+
+        .popup .form h2 {
+            font-size: 20px; /* Adjust the font size for smaller screens */
+            margin-bottom: 15px; /* Adjust margin for smaller screens */
+        }
+
+        .popup .btn-close {
+            top: 5px; /* Adjust the top position for the close button on smaller screens */
+            right: 5px; /* Adjust the right position for the close button on smaller screens */
+            width: 12px; /* Adjust the width of the close button on smaller screens */
+            height: 12px; /* Adjust the height of the close button on smaller screens */
+            line-height: 12px; /* Adjust the line height of the close button on smaller screens */
+        }
+
+        .popup .form .form-element input[type="text"] {
+            padding: 8px; /* Adjust padding for text input on smaller screens */
+        }
+
+        .popup .form .form-element button {
+            height: 35px; /* Adjust the height of the button on smaller screens */
+            font-size: 14px; /* Adjust the font size of the button on smaller screens */
+        }
+
+    /* Add any other adjustments for phones here */
+}
 
     
